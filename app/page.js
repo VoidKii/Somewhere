@@ -2,7 +2,7 @@
 
 import * as THREE from "three";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 const photos = {
   portrait: "https://raw.githubusercontent.com/VoidKii/Somewhere/main/Contemplative%20Low-Angle%20Indoor%20Portrait.png",
@@ -10,15 +10,6 @@ const photos = {
   second: "https://raw.githubusercontent.com/VoidKii/Somewhere/main/IMG_3733.JPG"
 };
 
-const profileContext = [
-  "The person behind this portfolio is Sandip Chapagain.",
-  "SOMEWHERE is Sandip's personal portfolio and creative home. The name is the brand; his name remains Sandip Chapagain.",
-  "Sandip describes himself as an aspiring developer and creator.",
-  "He explores software, AI assistants, web experiences, creative experiments, and video projects.",
-  "His projects have included BISCUIT, Crispy, Velnor Studio, and personal AI experiments. Do not invent features, launch status, metrics, clients, or professional experience.",
-  "If asked about a specific skill, achievement, project detail, or contact information not provided in this context, say you do not have confirmed information and invite the visitor to ask Sandip.",
-  "Be thoughtful, concise, curious, and honest. Never fabricate personal facts."
-];
 
 function BrainArtwork() {
   const canvasRef = useRef(null);
@@ -129,71 +120,12 @@ function BrainArtwork() {
 }
 
 export default function Home() {
-  const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState("about");
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [ready, setReady] = useState(false);
-  const bottomRef = useRef(null);
-
-  useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem("somewhere-chat") || "[]");
-      if (Array.isArray(saved)) setMessages(saved.slice(-30));
-    } catch {}
-    setReady(true);
-  }, []);
-
-  useEffect(() => {
-    if (ready) localStorage.setItem("somewhere-chat", JSON.stringify(messages.slice(-30)));
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, ready, open]);
-
-  async function sendMessage(event) {
-    event?.preventDefault();
-    const message = input.trim();
-    if (!message || busy) return;
-    const next = [...messages, { role: "user", content: message, mode }];
-    setMessages(next);
-    setInput("");
-    setError("");
-    setBusy(true);
-    try {
-      const history = next.slice(-17, -1).map(({ role, content }) => ({ role, content }));
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message,
-          history,
-          mode,
-          memories: mode === "about" ? profileContext.map(content => ({ content })) : []
-        })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "The assistant couldn't respond.");
-      setMessages(current => [...current, { role: "assistant", content: data.answer }]);
-    } catch (err) {
-      setError(err.message || "Something went wrong. Please try again.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function enterAssistant(selectedMode = "about") {
-    setMode(selectedMode);
-    setOpen(true);
-    setError("");
-  }
-
   return (
     <main>
       <nav className="nav">
         <a className="wordmark" href="#top">SOMEWHERE<span>®</span></a>
         <div className="nav-links"><a href="#about">ABOUT</a><a href="#work">SELECTED WORK</a><a href="#contact">CONTACT</a></div>
-        <button className="nav-ai" onClick={() => enterAssistant("about")}>TALK TO THE AI <span>↗</span></button>
+        <a className="nav-ai" href="https://biscuit-ytbellsroast-8207.vercel.app">OPEN BISCUIT <span>↗</span></a>
       </nav>
 
       <section className="hero" id="top">
@@ -202,7 +134,7 @@ export default function Home() {
           <p className="eyebrow">A PERSONAL SPACE BY SANDIP CHAPAGAIN</p>
           <h1>Somewhere<br/><em>between</em> ideas<br/>and <span>what’s next.</span></h1>
           <p className="hero-description">I’m Sandip — an aspiring developer and creator, exploring the space where technology, curiosity, and imagination meet.</p>
-          <div className="hero-actions"><a className="text-link" href="#work">EXPLORE MY WORLD <span>↓</span></a><button className="text-link" onClick={() => enterAssistant("about")}>MEET MY AI <span>↗</span></button></div>
+          <div className="hero-actions"><a className="text-link" href="#work">EXPLORE MY WORLD <span>↓</span></a><a className="text-link" href="https://biscuit-ytbellsroast-8207.vercel.app">MEET BISCUIT <span>↗</span></a></div>
         </div>
         <div className="hero-image-wrap">
           <img className="hero-image" src={photos.portrait} alt="Portrait of Sandip" />
@@ -215,7 +147,7 @@ export default function Home() {
         <div className="section-index">01 — A LITTLE ABOUT ME</div>
         <div className="manifesto-grid">
           <h2>Not here to have it all figured out. <em>Here to figure things out.</em></h2>
-          <div className="manifesto-side"><p>I like turning “what if?” into something real. Some days that means building software. Other days it means experimenting with AI, making videos, or following an idea just to see where it goes.</p><p>This space is a snapshot of that process — unfinished in the best way.</p><button className="round-link" onClick={() => enterAssistant("about")}>ASK ABOUT ME <span>↗</span></button></div>
+          <div className="manifesto-side"><p>I like turning “what if?” into something real. Some days that means building software. Other days it means experimenting with AI, making videos, or following an idea just to see where it goes.</p><p>This space is a snapshot of that process — unfinished in the best way.</p><a className="round-link" href="https://biscuit-ytbellsroast-8207.vercel.app">ASK BISCUIT <span>↗</span></a></div>
         </div>
         <div className="photo-ribbon">
           <figure className="ribbon-large"><img src={photos.first} alt="A personal photograph from Sandip's collection" /><figcaption>01 / THE IN-BETWEEN</figcaption></figure>
@@ -227,7 +159,7 @@ export default function Home() {
         <div className="section-index">02 — THINGS I’VE BEEN MAKING</div>
         <div className="work-heading"><h2>Curiosity,<br/><em>made tangible.</em></h2><p>A few corners of the internet and imagination I’ve been exploring. Projects evolve; this list is a starting point, not a finish line.</p></div>
         <div className="project-list">
-          <article className="project"><span className="project-no">01</span><div><h3>BISCUIT</h3><p>A personal AI assistant experiment — a little space for big thoughts.</p></div><span className="project-type">AI / PRODUCT</span><a href="https://github.com/VoidKii/biscuit" target="_blank" rel="noreferrer" aria-label="View BISCUIT on GitHub">↗</a></article>
+          <article className="project"><span className="project-no">01</span><div><h3>BISCUIT</h3><p>A personal AI assistant experiment — a little space for big thoughts.</p></div><span className="project-type">AI / PRODUCT</span><a href="https://biscuit-ytbellsroast-8207.vercel.app" target="_blank" rel="noreferrer" aria-label="Open BISCUIT AI">↗</a></article>
           <article className="project"><span className="project-no">02</span><div><h3>VELNOR STUDIO</h3><p>Exploring tools and workflows for creators and video makers.</p></div><span className="project-type">CREATOR TOOLS</span><a href="https://github.com/VoidKii" target="_blank" rel="noreferrer" aria-label="Explore projects on GitHub">↗</a></article>
           <article className="project"><span className="project-no">03</span><div><h3>SMALL EXPERIMENTS</h3><p>Interfaces, prototypes, and ideas that start with a question.</p></div><span className="project-type">EXPLORATIONS</span><a href="https://github.com/VoidKii" target="_blank" rel="noreferrer" aria-label="Explore GitHub">↗</a></article>
         </div>
@@ -236,8 +168,8 @@ export default function Home() {
       <section className="brain-section">
         <div className="section-index">03 — A DIFFERENT WAY TO EXPLORE</div>
         <div className="brain-layout">
-          <div className="brain-copy"><p className="eyebrow">A MIND OF ITS OWN (SORT OF)</p><h2>There’s more<br/>behind the <em>surface.</em></h2><p>Meet the little intelligence living in this corner of the internet. Ask it about my projects, how things work, or just give it a thought to explore.</p><button className="brain-cta" onClick={() => enterAssistant("about")}>OPEN THE CONVERSATION <span>↗</span></button><span className="brain-caption">AN INTERACTIVE WINDOW INTO SOMEWHERE</span></div>
-          <button className="brain-button" onClick={() => enterAssistant("about")} aria-label="Open the AI assistant"><BrainArtwork /><span className="brain-orbit-label">TAP TO THINK ↗</span></button>
+          <div className="brain-copy"><p className="eyebrow">A MIND OF ITS OWN (SORT OF)</p><h2>Curiosity has<br/>a <em>destination.</em></h2><p>This is the doorway to BISCUIT — my separate AI assistant. One click takes you straight into its own space.</p><span className="brain-caption">SOMEWHERE × BISCUIT</span></div>
+          <a className="brain-button" href="https://biscuit-ytbellsroast-8207.vercel.app" aria-label="Open BISCUIT AI"><BrainArtwork /><span className="brain-orbit-label">ENTER BISCUIT ↗</span></a>
         </div>
       </section>
 
