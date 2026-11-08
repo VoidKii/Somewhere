@@ -1,5 +1,7 @@
 "use client";
 
+import * as THREE from "three";
+
 import { useEffect, useRef, useState } from "react";
 
 const photos = {
@@ -19,61 +21,111 @@ const profileContext = [
 ];
 
 function BrainArtwork() {
-  return (
-    <svg className="brain-art" viewBox="0 0 640 520" role="img" aria-label="An intricate illustrated brain suspended in a field of light">
-      <defs>
-        <radialGradient id="brainFill" cx="48%" cy="38%" r="68%">
-          <stop offset="0" stopColor="#f4c99c" />
-          <stop offset=".55" stopColor="#c98255" />
-          <stop offset="1" stopColor="#633b32" />
-        </radialGradient>
-        <linearGradient id="brainStroke" x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0" stopColor="#ffe4c5" />
-          <stop offset="1" stopColor="#8b4d3d" />
-        </linearGradient>
-        <filter id="brainGlow"><feGaussianBlur stdDeviation="15" /></filter>
-      </defs>
-      <ellipse cx="320" cy="265" rx="205" ry="174" fill="#d58b60" opacity=".13" filter="url(#brainGlow)" />
-      <g className="brain-float">
-        <path d="M316 111 C281 72 224 83 205 119 C160 113 130 152 144 190 C105 218 119 270 151 290 C132 335 164 374 207 370 C228 411 278 413 311 383 C321 400 328 399 336 382 C371 411 419 400 434 364 C480 369 507 330 485 291 C521 260 507 212 474 192 C486 148 449 117 410 123 C387 83 342 78 316 111Z" fill="url(#brainFill)" stroke="url(#brainStroke)" strokeWidth="3" />
-        <path d="M320 112 C308 158 330 178 316 213 C304 250 329 275 315 310 C305 337 321 360 319 388" fill="none" stroke="#4e302d" strokeWidth="5" opacity=".9" />
-        <g fill="none" stroke="#f9d8b7" strokeWidth="3" strokeLinecap="round" opacity=".83">
-          <path d="M205 120 C190 144 218 151 205 174 C192 196 163 183 160 208 C157 230 187 238 181 261 C175 284 149 278 154 305" />
-          <path d="M241 99 C222 122 242 139 229 160 C214 182 235 195 224 216 C212 237 190 228 195 253 C200 277 228 277 219 303 C212 325 192 332 207 365" />
-          <path d="M278 104 C259 126 283 144 268 167 C253 190 275 204 259 226 C245 247 268 265 253 286 C240 305 255 332 278 351" />
-          <path d="M164 237 C188 222 204 242 202 261 C200 280 180 291 191 310" />
-          <path d="M210 157 C231 146 248 160 243 181 C239 201 258 211 275 202" />
-          <path d="M344 103 C365 123 345 143 362 161 C381 181 358 199 378 218 C398 237 374 253 390 273" />
-          <path d="M392 119 C413 140 393 157 413 177 C435 199 411 218 432 235 C450 250 432 272 451 289" />
-          <path d="M453 151 C470 175 445 188 463 209 C482 231 459 248 477 268" />
-          <path d="M346 240 C365 222 390 232 388 254 C386 276 412 284 405 305 C400 325 378 327 382 352" />
-          <path d="M350 299 C369 282 389 299 382 318 C376 337 401 351 418 348" />
-          <path d="M268 362 C285 343 301 356 298 374" />
-          <path d="M425 361 C439 338 459 344 464 323" />
-        </g>
-        <g fill="none" stroke="#633b32" strokeWidth="2" opacity=".75">
-          <path d="M185 204 C210 190 214 211 208 226" />
-          <path d="M245 126 C263 139 254 155 247 165" />
-          <path d="M282 235 C300 221 299 204 289 190" />
-          <path d="M366 135 C349 151 360 171 373 178" />
-          <path d="M430 204 C412 192 403 211 412 225" />
-          <path d="M448 300 C425 289 416 309 425 326" />
-          <path d="M231 327 C248 309 267 320 262 341" />
-        </g>
-        <g fill="#ffe2bd">
-          <circle cx="207" cy="174" r="4"/><circle cx="243" cy="181" r="3"/><circle cx="268" cy="167" r="3"/>
-          <circle cx="413" cy="177" r="4"/><circle cx="432" cy="235" r="3"/><circle cx="382" cy="318" r="4"/>
-        </g>
-      </g>
-      <g fill="none" stroke="#d69a70" opacity=".42">
-        <ellipse cx="320" cy="258" rx="250" ry="205" strokeDasharray="2 12" />
-        <ellipse cx="320" cy="258" rx="280" ry="230" strokeDasharray="1 18" />
-      </g>
-      <g fill="#f3c9a3">
-        <circle cx="76" cy="232" r="2"/><circle cx="554" cy="170" r="2"/><circle cx="500" cy="405" r="2"/><circle cx="126" cy="390" r="2"/>
-      </g>
-    </svg>
-  );
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    let renderer, frame = 0, observer;
+    let pointerX = 0, pointerY = 0, targetX = 0, targetY = 0;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+    camera.position.set(0, 0, 5.4);
+    const brain = new THREE.Group();
+    scene.add(brain);
+
+    const makeHemisphere = (side) => {
+      const geometry = new THREE.SphereGeometry(1, 72, 56);
+      const position = geometry.attributes.position;
+      for (let i = 0; i < position.count; i++) {
+        const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
+        const theta = Math.acos(Math.max(-1, Math.min(1, y)));
+        const phi = Math.atan2(z, x);
+        const fold = Math.sin(phi * 9 + Math.cos(theta * 5) * 1.8) * Math.sin(theta * 7) * 0.026 + Math.sin(phi * 15 - theta * 4) * 0.012;
+        position.setXYZ(i, x * (1 + fold), y * (1 + fold), z * (1 + fold));
+      }
+      geometry.computeVertexNormals();
+      const material = new THREE.MeshPhysicalMaterial({ color: 0xc98255, roughness: 0.57, metalness: 0.02, clearcoat: 0.24, clearcoatRoughness: 0.6 });
+      const lobe = new THREE.Mesh(geometry, material);
+      lobe.scale.set(0.79, 1.02, 0.66);
+      lobe.position.x = side * 0.405;
+      brain.add(lobe);
+
+      const grooveMaterial = new THREE.MeshStandardMaterial({ color: 0x603b32, roughness: 0.8, transparent: true, opacity: 0.72 });
+      for (let line = 0; line < 9; line++) {
+        const points = [];
+        const basePhi = -1.15 + line * 0.285;
+        for (let step = 0; step <= 34; step++) {
+          const theta = 0.28 + (step / 34) * 2.48;
+          const phi = basePhi + Math.sin(theta * 5.2 + line) * 0.105;
+          const ripple = 1 + Math.sin(phi * 9 + Math.cos(theta * 5) * 1.8) * Math.sin(theta * 7) * 0.026;
+          points.push(new THREE.Vector3(
+            side * 0.405 + side * 0.797 * Math.sin(theta) * Math.cos(phi) * ripple,
+            1.025 * Math.cos(theta) * ripple,
+            0.667 * Math.sin(theta) * Math.sin(phi) * ripple
+          ));
+        }
+        const curve = new THREE.CatmullRomCurve3(points);
+        brain.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 54, 0.009, 5, false), grooveMaterial));
+      }
+    };
+
+    makeHemisphere(-1);
+    makeHemisphere(1);
+    scene.add(new THREE.AmbientLight(0xffe7d0, 2.1));
+    const keyLight = new THREE.DirectionalLight(0xffe1c2, 3.2);
+    keyLight.position.set(-3, 4, 5);
+    scene.add(keyLight);
+    const rimLight = new THREE.PointLight(0xb76c4d, 18, 9);
+    rimLight.position.set(3, -1, -2);
+    scene.add(rimLight);
+
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.8));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.15;
+    } catch { return; }
+
+    const resize = () => {
+      const width = Math.max(1, canvas.clientWidth), height = Math.max(1, canvas.clientHeight);
+      renderer.setSize(width, height, false);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    };
+    observer = new ResizeObserver(resize);
+    observer.observe(canvas);
+    const onPointer = (event) => {
+      const bounds = canvas.getBoundingClientRect();
+      targetY = ((event.clientX - bounds.left) / bounds.width - 0.5) * 0.5;
+      targetX = ((event.clientY - bounds.top) / bounds.height - 0.5) * 0.22;
+    };
+    canvas.addEventListener("pointermove", onPointer);
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const animate = () => {
+      frame = requestAnimationFrame(animate);
+      if (!reducedMotion) {
+        pointerX += (targetX - pointerX) * 0.035;
+        pointerY += (targetY - pointerY) * 0.035;
+        brain.rotation.y += (0.12 + pointerY - brain.rotation.y) * 0.008;
+        brain.rotation.x += (pointerX - brain.rotation.x) * 0.025;
+      }
+      renderer.render(scene, camera);
+    };
+    animate();
+    return () => {
+      cancelAnimationFrame(frame);
+      observer?.disconnect();
+      canvas.removeEventListener("pointermove", onPointer);
+      brain.traverse(object => {
+        object.geometry?.dispose();
+        if (Array.isArray(object.material)) object.material.forEach(material => material.dispose());
+        else object.material?.dispose();
+      });
+      renderer.dispose();
+    };
+  }, []);
+  return <canvas ref={canvasRef} className="brain-art" aria-label="Interactive three-dimensional brain illustration" />;
 }
 
 export default function Home() {
