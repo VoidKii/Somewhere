@@ -245,16 +245,16 @@ export default function Home() {
 
       <footer><a className="wordmark" href="#top">SOMEWHERE<span>®</span></a><span>STILL BECOMING.</span><a href="#top">BACK TO TOP ↑</a></footer>
 
-      {open && <div className="assistant-shell" role="dialog" aria-modal="true" aria-label="Somewhere AI assistant">
+      {open && <div className="assistant-shell" role="dialog" aria-modal="true" aria-label="BISCUIT AI assistant">
         <button className="assistant-backdrop" onClick={() => setOpen(false)} aria-label="Close assistant" />
         <section className="assistant-panel">
-          <header className="assistant-header"><div><span className="live-dot" /> SOMEWHERE INTELLIGENCE <small>POWERED BY BISCUIT</small></div><button onClick={() => setOpen(false)} aria-label="Close">×</button></header>
+          <header className="assistant-header"><div><span className="live-dot" /> BISCUIT <small>THE AI INSIDE SOMEWHERE</small></div><button onClick={() => setOpen(false)} aria-label="Close">×</button></header>
           <div className="assistant-intro"><div className="mini-brain"><BrainArtwork /></div><p className="eyebrow">A CONVERSATION STARTS HERE</p><h2>{mode === "about" ? "Curious about me?" : "What’s on your mind?"}</h2><p>{mode === "about" ? "Ask about the person, the projects, or the thinking behind this space." : "A general-purpose AI space for questions, ideas, and exploration."}</p></div>
           <div className="mode-switch"><button className={mode === "about" ? "active" : ""} onClick={() => setMode("about")}>ABOUT SANDIP</button><button className={mode === "general" ? "active" : ""} onClick={() => setMode("general")}>ASK ANYTHING</button></div>
           <div className="chat-scroll">
             {messages.length === 0 && <div className="suggestions"><button onClick={() => setInput("What is SOMEWHERE?")}>What is this place? <span>↗</span></button><button onClick={() => setInput("Tell me about Sandip's projects.")}>Tell me about the projects <span>↗</span></button><button onClick={() => {setMode("general");setInput("Give me an interesting idea to explore.");}}>Give me an idea to explore <span>↗</span></button></div>}
-            {messages.map((item, index) => <div className={"message " + item.role} key={index}><span>{item.role === "user" ? "YOU" : "SOMEWHERE"}</span><p>{item.content}</p></div>)}
-            {busy && <div className="message assistant"><span>SOMEWHERE</span><p className="typing">Thinking<span>.</span><span>.</span><span>.</span></p></div>}
+            {messages.map((item, index) => <div className={"message " + item.role} key={index}><span>{item.role === "user" ? "YOU" : "BISCUIT"}</span><p>{item.content}</p></div>)}
+            {busy && <div className="message assistant"><span>BISCUIT</span><p className="typing">Thinking<span>.</span><span>.</span><span>.</span></p></div>}
             {error && <p className="chat-error">{error}</p>}<div ref={bottomRef} />
           </div>
           <form className="chat-form" onSubmit={sendMessage}><input value={input} onChange={e => setInput(e.target.value)} placeholder="Leave a thought here…" maxLength={8000} /><button disabled={busy || !input.trim()} aria-label="Send message">↑</button></form>
