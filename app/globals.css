@@ -112,3 +112,73 @@ footer>a:last-child{transition:color .2s}footer>a:last-child:hover{color:var(--r
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* Responsive refinements */
+:focus-visible{outline:2px solid var(--rust);outline-offset:4px}
+img{max-width:100%}
+@media (min-width:761px) and (max-width:1050px){
+  .hero{padding-left:7vw;padding-right:7vw}
+  .hero-copy{width:66%}
+  .hero-image-wrap{right:7%;width:29%;height:54%}
+  .manifesto,.work,.brain-section,.contact{padding-left:7vw;padding-right:7vw}
+  .manifesto-grid{gap:7%}
+  .brain-layout{grid-template-columns:.9fr 1.1fr;gap:3%}
+  .brain-art{height:420px}
+}
+@media (max-width:760px){
+  html{scroll-padding-top:76px}
+  .nav{padding-left:max(6vw,env(safe-area-inset-left));padding-right:max(6vw,env(safe-area-inset-right))}
+  .nav-ai{white-space:nowrap}
+  .hero{
+    min-height:900px;
+    min-height:max(900px,100svh);
+    padding-left:7vw;padding-right:7vw;
+  }
+  .hero-copy{max-width:100%;padding-top:22px}
+  .hero h1{font-size:clamp(52px,13.2vw,82px);line-height:.98;letter-spacing:-.075em}
+  .hero-description{max-width:min(62%,330px);font-size:12px;line-height:1.75}
+  .hero-actions{gap:18px 24px;flex-wrap:wrap;margin-top:28px}
+  .text-link{font-size:8px}
+  .hero-image-wrap{width:43%;height:290px;right:7%;bottom:78px;top:auto}
+  .image-note{font-size:6px;white-space:nowrap}
+  .hero-topline{gap:12px}
+  .hero-topline span:last-child{text-align:right}
+  .manifesto,.work,.brain-section,.contact{padding-top:76px;padding-bottom:76px}
+  .manifesto h2{font-size:clamp(42px,11vw,54px)}
+  .photo-ribbon{grid-template-columns:minmax(0,1.35fr) minmax(0,.8fr)}
+  .ribbon-large img{height:clamp(220px,65vw,310px)}
+  .ribbon-small img{height:clamp(155px,43vw,215px)}
+  .work-heading h2{font-size:clamp(48px,12vw,60px)}
+  .project{grid-template-columns:24px minmax(0,1fr) 22px;gap:9px}
+  .project p{max-width:34ch}
+  .brain-layout{grid-template-columns:minmax(0,1fr)}
+  .brain-button{min-height:260px}
+  .brain-art{height:clamp(260px,78vw,360px)}
+  .contact h2{font-size:clamp(48px,12vw,76px);line-height:1.02}
+  .contact-bottom{padding-bottom:max(20px,env(safe-area-inset-bottom))}
+  footer{padding-left:6vw;padding-right:6vw;gap:12px}
+}
+@media (max-width:420px){
+  .nav{height:64px}
+  .wordmark{font-size:14px}
+  .nav-ai{padding:9px 10px;font-size:7px}
+  .hero{min-height:860px;min-height:max(860px,100svh);padding-top:126px}
+  .hero-topline{top:84px;font-size:6px;letter-spacing:.08em}
+  .hero h1{font-size:clamp(48px,12.7vw,58px);margin:18px 0}
+  .hero-description{max-width:66%;font-size:11px}
+  .hero-actions{gap:14px;margin-top:24px}
+  .text-link{font-size:7px;letter-spacing:.07em}
+  .hero-image-wrap{width:44%;height:245px;bottom:72px}
+  .hero-foot{font-size:6px}
+  .manifesto h2,.brain-copy h2{font-size:clamp(40px,10.8vw,48px)}
+  .photo-ribbon{gap:9px}
+  .ribbon-small{margin-top:54px!important}
+  .project h3{font-size:15px}
+  .project p{font-size:10px}
+  .brain-art{height:270px}
+  .brain-orbit-label{right:5%;bottom:5%;font-size:7px}
+  .contact h2{font-size:clamp(44px,11.5vw,58px)}
+  .contact-bottom{font-size:6px;gap:10px}
+  footer{font-size:6px}
+  footer .wordmark{font-size:10px}
+}
