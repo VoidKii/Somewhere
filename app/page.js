@@ -11,6 +11,8 @@ const photos = {
 };
 
 
+"use client";
+
 function BrainArtwork() {
   const canvasRef = useRef(null);
 
@@ -21,6 +23,7 @@ function BrainArtwork() {
     let renderer;
     let frame = 0;
     let observer;
+    let model = null;
     let pointerX = 0;
     let pointerY = 0;
     let targetX = 0;
@@ -32,205 +35,6 @@ function BrainArtwork() {
 
     const brain = new THREE.Group();
     scene.add(brain);
-
-    const foldAt = (theta, phi, seed = 0) => {
-      const broad = Math.sin(phi * 10.5 + Math.sin(theta * 6.2 + seed) * 1.35 + seed);
-      const cross = Math.sin(theta * 12.5 + Math.sin(phi * 5.4 - seed) * 0.8);
-      const fine = Math.sin(phi * 21 + theta * 8.5 + seed * 2);
-      const ridges = Math.pow(Math.abs(broad), 2.2) * 0.022
-        + Math.pow(Math.abs(cross), 2.5) * 0.012
-        + Math.sin(fine) * 0.004;
-      const envelope = Math.sin(theta) * (0.72 + 0.28 * Math.sin(theta * 2));
-      return (ridges - 0.018) * envelope;
-    };
-
-    const surfacePoint = (theta, phi, side, seed = 0) => {
-      const fold = foldAt(theta, phi, seed);
-      const radius = 1 + fold;
-      return new THREE.Vector3(
-        side * 0.405 + side * 0.765 * Math.sin(theta) * Math.cos(phi) * radius,
-        1.015 * Math.cos(theta) * (1 + fold * 0.8),
-        0.65 * Math.sin(theta) * Math.sin(phi) * radius
-      );
-    };
-
-    const grooveMaterial = new THREE.MeshStandardMaterial({
-      color: 0x503129,
-      roughness: 0.92,
-      transparent: true,
-      opacity: 0.56
-    });
-
-    const makeHemisphere = (side) => {
-      const seed = side * 1.7;
-      const geometry = new THREE.SphereGeometry(1, 144, 112);
-      const position = geometry.attributes.position;
-
-      for (let i = 0; i < position.count; i++) {
-        const x = position.getX(i);
-        const y = position.getY(i);
-        const z = position.getZ(i);
-        const theta = Math.acos(Math.max(-1, Math.min(1, y)));
-        const phi = Math.atan2(z, x);
-        const fold = foldAt(theta, phi, seed);
-        const radius = 1 + fold;
-        position.setXYZ(
-          i,
-          x * radius,
-          y * (1 + fold * 0.8),
-          z * radius
-        );
-      }
-
-      geometry.computeVertexNormals();
-
-      const material = new THREE.MeshPhysicalMaterial({
-        color: 0xb97853,
-        roughness: 0.68,
-        metalness: 0.015,
-        clearcoat: 0.28,
-        clearcoatRoughness: 0.62
-      });
-
-      const hemisphere = new THREE.Mesh(geometry, material);
-      hemisphere.scale.set(0.765, 1.015, 0.65);
-      hemisphere.position.x = side * 0.405;
-      brain.add(hemisphere);
-
-      // Long, branching sulci follow the curved surface rather than sitting as flat stripes.
-      for (let line = 0; line < 17; line++) {
-        const points = [];
-        const basePhi = -1.42 + line * 0.177;
-        const steps = 54;
-
-        for (let step = 0; step <= steps; step++) {
-          const theta = 0.24 + (step / steps) * 2.62;
-          const phi = basePhi
-            + Math.sin(theta * 4.4 + line * 1.31) * 0.12
-            + Math.sin(theta * 10.2 - line * 0.72) * 0.035;
-          points.push(surfacePoint(theta, phi, side, seed).multiplyScalar(1.006));
-        }
-
-        const curve = new THREE.CatmullRomCurve3(points);
-        const groove = new THREE.Mesh(
-          new THREE.TubeGeometry(curve, 72, line % 3 === 0 ? 0.008 : 0.0055, 5, false),
-          grooveMaterial
-        );
-        brain.add(groove);
-      }
-
-      // Short secondary folds break up the larger cortical ridges.
-      for (let branch = 0; branch < 13; branch++) {
-        const thetaStart = 0.48 + (branch % 5) * 0.43;
-        const phiStart = -1.22 + branch * 0.19;
-        const points = [];
-
-        for (let step = 0; step <= 15; step++) {
-          const t = step / 15;
-          const theta = thetaStart + t * (0.28 + (branch % 3) * 0.08);
-          const phi = phiStart + Math.sin(t * Math.PI) * (branch % 2 ? 0.13 : -0.13);
-          points.push(surfacePoint(theta, phi, side, seed).multiplyScalar(1.007));
-        }
-
-        const curve = new THREE.CatmullRomCurve3(points);
-        brain.add(new THREE.Mesh(
-          new THREE.TubeGeometry(curve, 24, 0.0042, 4, false),
-          grooveMaterial
-        ));
-      }
-    };
-
-    makeHemisphere(-1);
-    makeHemisphere(1);
-
-    // Cerebellum: smaller, densely folded structure tucked behind the lower cortex.
-    const cerebellumGeometry = new THREE.SphereGeometry(1, 112, 80);
-    const cerebellumPosition = cerebellumGeometry.attributes.position;
-    for (let i = 0; i < cerebellumPosition.count; i++) {
-      const x = cerebellumPosition.getX(i);
-      const y = cerebellumPosition.getY(i);
-      const z = cerebellumPosition.getZ(i);
-      const theta = Math.acos(Math.max(-1, Math.min(1, y)));
-      const phi = Math.atan2(z, x);
-      const folia = Math.sin(theta * 31 + Math.sin(phi * 7) * 1.7) * 0.018
-        + Math.sin(theta * 18 - phi * 9) * 0.009;
-      const radius = 1 + folia;
-      cerebellumPosition.setXYZ(x * radius, y * radius, z * radius);
-    }
-    cerebellumGeometry.computeVertexNormals();
-
-    const cerebellum = new THREE.Mesh(
-      cerebellumGeometry,
-      new THREE.MeshPhysicalMaterial({
-        color: 0x986047,
-        roughness: 0.76,
-        metalness: 0.01,
-        clearcoat: 0.18
-      })
-    );
-    cerebellum.scale.set(0.43, 0.285, 0.29);
-    cerebellum.position.set(0, -0.72, -0.39);
-    brain.add(cerebellum);
-
-    // Fine folia on the visible rear-lower surface of the cerebellum.
-    const foliaMaterial = new THREE.MeshStandardMaterial({
-      color: 0x57382f,
-      roughness: 0.9,
-      transparent: true,
-      opacity: 0.58
-    });
-    for (let line = 0; line < 17; line++) {
-      const points = [];
-      const y = -0.91 + line * 0.023;
-      for (let step = 0; step <= 30; step++) {
-        const t = -1 + (step / 30) * 2;
-        const x = t * 0.405;
-        const z = -0.39 + Math.sqrt(Math.max(0.04, 1 - (x / 0.43) ** 2 - ((y + 0.72) / 0.285) ** 2)) * 0.292;
-        points.push(new THREE.Vector3(x, y + Math.sin(t * 5 + line) * 0.009, z));
-      }
-      const curve = new THREE.CatmullRomCurve3(points);
-      brain.add(new THREE.Mesh(
-        new THREE.TubeGeometry(curve, 36, 0.0045, 4, false),
-        foliaMaterial
-      ));
-    }
-
-    // Tapered brainstem, visible below the cerebrum.
-    const stemProfile = [
-      new THREE.Vector2(0.13, -0.02),
-      new THREE.Vector2(0.16, -0.13),
-      new THREE.Vector2(0.145, -0.28),
-      new THREE.Vector2(0.12, -0.43),
-      new THREE.Vector2(0.105, -0.58),
-      new THREE.Vector2(0.085, -0.72)
-    ];
-    const stemGeometry = new THREE.LatheGeometry(stemProfile, 48);
-    const stem = new THREE.Mesh(
-      stemGeometry,
-      new THREE.MeshPhysicalMaterial({
-        color: 0x956047,
-        roughness: 0.7,
-        clearcoat: 0.2
-      })
-    );
-    stem.position.set(0, -0.78, -0.13);
-    stem.rotation.x = -0.12;
-    brain.add(stem);
-
-    // A restrained central fissure makes the two hemispheres read as separate structures.
-    const fissurePoints = [];
-    for (let i = 0; i <= 24; i++) {
-      const t = i / 24;
-      fissurePoints.push(new THREE.Vector3(
-        Math.sin(t * Math.PI * 2) * 0.008,
-        0.91 - t * 1.64,
-        0.618 - Math.sin(t * Math.PI) * 0.025
-      ));
-    }
-    brain.add(new THREE.Mesh(
-      new THREE.TubeGeometry(new THREE.CatmullRomCurve3(fissurePoints), 48, 0.009, 5, false),
-      grooveMaterial
-    ));
 
     const ambient = new THREE.HemisphereLight(0xffe8d5, 0x241714, 2.15);
     scene.add(ambient);
@@ -287,6 +91,54 @@ function BrainArtwork() {
     canvas.addEventListener("pointermove", onPointer);
     canvas.addEventListener("pointerleave", onPointerLeave);
 
+    // Load the real OBJ model committed to the repository.
+    let disposed = false;
+    import("three/addons/loaders/OBJLoader.js").then(({ OBJLoader }) => {
+      if (disposed) return;
+      const loader = new OBJLoader();
+      loader.load(
+        "https://raw.githubusercontent.com/VoidKii/Somewhere/main/Brain.obj",
+        (object) => {
+          if (disposed) {
+            object.traverse((child) => child.geometry?.dispose());
+            return;
+          }
+
+          const bounds = new THREE.Box3().setFromObject(object);
+          const center = bounds.getCenter(new THREE.Vector3());
+          const size = bounds.getSize(new THREE.Vector3());
+          object.position.sub(center);
+          const largestDimension = Math.max(size.x, size.y, size.z);
+          object.scale.setScalar(2.2 / largestDimension);
+
+          const brainMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0xb97853,
+            roughness: 0.68,
+            metalness: 0.015,
+            clearcoat: 0.28,
+            clearcoatRoughness: 0.62
+          });
+
+          object.traverse((child) => {
+            if (!child.isMesh) return;
+            child.material = brainMaterial;
+            child.geometry.computeVertexNormals();
+            child.castShadow = false;
+            child.receiveShadow = false;
+          });
+
+          model = object;
+          brain.add(model);
+        },
+        undefined,
+        (error) => {
+          console.error("SOMEWHERE brain model could not be loaded:", error);
+        }
+      );
+    }).catch((error) => {
+      console.error("SOMEWHERE brain loader could not be initialized:", error);
+    });
+
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const animate = () => {
       frame = requestAnimationFrame(animate);
@@ -301,6 +153,7 @@ function BrainArtwork() {
     animate();
 
     return () => {
+      disposed = true;
       cancelAnimationFrame(frame);
       observer?.disconnect();
       canvas.removeEventListener("pointermove", onPointer);
@@ -321,7 +174,7 @@ function BrainArtwork() {
     <canvas
       ref={canvasRef}
       className="brain-art"
-      aria-label="Interactive three-dimensional brain illustration with folded hemispheres, cerebellum and brainstem"
+      aria-label="Interactive three-dimensional brain model"
     />
   );
 }
