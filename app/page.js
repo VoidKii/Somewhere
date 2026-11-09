@@ -89,18 +89,49 @@ function BrainArtwork() {
     canvas.addEventListener("pointermove", onPointer);
     canvas.addEventListener("pointerleave", onPointerLeave);
 
-    // Load the real OBJ model committed to the repository.
+    // Load the OBJ model and its extracted texture maps from the repository.
     let disposed = false;
-    import("three/addons/loaders/OBJLoader.js").then(({ OBJLoader }) => {
+    import("three/addons/loaders/OBJLoader.js").then(async ({ OBJLoader }) => {
       if (disposed) return;
       const loader = new OBJLoader();
       loader.load(
         "https://raw.githubusercontent.com/VoidKii/Somewhere/main/Brain.obj",
-        (object) => {
+        async (object) => {
           if (disposed) {
             object.traverse((child) => child.geometry?.dispose());
             return;
           }
+
+          const textureLoader = new THREE.TextureLoader();
+          const textureRoot = "https://raw.githubusercontent.com/VoidKii/Somewhere/main/Brain_Textures/";
+          const loadTexture = (filename) => textureLoader.loadAsync(textureRoot + filename);
+
+          let diffuseMap;
+          let normalMap;
+          let displacementMap;
+          let specularMap;
+
+          try {
+            [diffuseMap, normalMap, displacementMap, specularMap] = await Promise.all([
+              loadTexture("BrainDiff03.png"),
+              loadTexture("BrainNormals.png"),
+              loadTexture("BrainDisp.png"),
+              loadTexture("BrainSpec.png")
+            ]);
+          } catch (error) {
+            console.error("SOMEWHERE brain textures could not all be loaded:", error);
+          }
+
+          if (disposed) {
+            [diffuseMap, normalMap, displacementMap, specularMap].forEach((texture) => texture?.dispose());
+            object.traverse((child) => child.geometry?.dispose());
+            return;
+          }
+
+          if (diffuseMap) diffuseMap.colorSpace = THREE.SRGBColorSpace;
+          [normalMap, displacementMap, specularMap].forEach((texture) => {
+            if (texture) texture.colorSpace = THREE.NoColorSpace;
+          });
 
           const bounds = new THREE.Box3().setFromObject(object);
           const center = bounds.getCenter(new THREE.Vector3());
@@ -111,11 +142,20 @@ function BrainArtwork() {
           object.position.copy(center).multiplyScalar(-scaleFactor);
 
           const brainMaterial = new THREE.MeshPhysicalMaterial({
-            color: 0xb97853,
-            roughness: 0.68,
-            metalness: 0.015,
-            clearcoat: 0.28,
-            clearcoatRoughness: 0.62
+            color: 0xffffff,
+            map: diffuseMap || null,
+            normalMap: normalMap || null,
+            normalScale: new THREE.Vector2(0.8, 0.8),
+            displacementMap: displacementMap || null,
+            displacementScale: displacementMap ? 0.006 : 0,
+            displacementBias: -0.003,
+            specularColorMap: specularMap || null,
+            specularColor: 0xffffff,
+            specularIntensity: specularMap ? 0.8 : 0.35,
+            roughness: 0.78,
+            metalness: 0.02,
+            clearcoat: 0.12,
+            clearcoatRoughness: 0.72
           });
 
           object.traverse((child) => {
