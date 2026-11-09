@@ -11,8 +11,6 @@ const photos = {
 };
 
 
-"use client";
-
 function BrainArtwork() {
   const canvasRef = useRef(null);
 
@@ -107,9 +105,10 @@ function BrainArtwork() {
           const bounds = new THREE.Box3().setFromObject(object);
           const center = bounds.getCenter(new THREE.Vector3());
           const size = bounds.getSize(new THREE.Vector3());
-          object.position.sub(center);
           const largestDimension = Math.max(size.x, size.y, size.z);
-          object.scale.setScalar(2.2 / largestDimension);
+          const scaleFactor = 2.2 / largestDimension;
+          object.scale.setScalar(scaleFactor);
+          object.position.copy(center).multiplyScalar(-scaleFactor);
 
           const brainMaterial = new THREE.MeshPhysicalMaterial({
             color: 0xb97853,
