@@ -50,13 +50,14 @@ function BrainArtwork() {
     scene.add(rimLight);
 
     try {
+      const isSmallScreen = window.matchMedia("(max-width: 760px)").matches;
       renderer = new THREE.WebGLRenderer({
         canvas,
         alpha: true,
-        antialias: true,
-        powerPreference: "high-performance"
+        antialias: !isSmallScreen,
+        powerPreference: isSmallScreen ? "low-power" : "high-performance"
       });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmallScreen ? 1.15 : 1.6));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.12;
@@ -67,6 +68,8 @@ function BrainArtwork() {
     const resize = () => {
       const width = Math.max(1, canvas.clientWidth);
       const height = Math.max(1, canvas.clientHeight);
+      const isSmallScreen = window.matchMedia("(max-width: 760px)").matches;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmallScreen ? 1.15 : 1.6));
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
@@ -179,7 +182,19 @@ function BrainArtwork() {
     });
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let isVisible = true;
+    const visibilityObserver = new IntersectionObserver(([entry]) => {
+      isVisible = entry.isIntersecting;
+      if (isVisible && !frame) animate();
+      if (!isVisible && frame) {
+        cancelAnimationFrame(frame);
+        frame = 0;
+      }
+    }, { threshold: 0.01 });
+    visibilityObserver.observe(canvas);
+
     const animate = () => {
+      if (!isVisible) return;
       frame = requestAnimationFrame(animate);
       if (!reducedMotion) {
         pointerX += (targetX - pointerX) * 0.035;
@@ -195,6 +210,7 @@ function BrainArtwork() {
       disposed = true;
       cancelAnimationFrame(frame);
       observer?.disconnect();
+      visibilityObserver.disconnect();
       canvas.removeEventListener("pointermove", onPointer);
       canvas.removeEventListener("pointerleave", onPointerLeave);
       brain.traverse((object) => {
